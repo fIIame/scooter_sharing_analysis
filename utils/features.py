@@ -83,3 +83,28 @@ def get_total_price(row: pd.Series, start_price: int = 30) -> float:
         total_price = start_price + duration_minutes * price_per_min
 
     return total_price
+
+
+def normalize_day_of_week(val: int) -> str:
+    """
+    Преобразует числовое значение дня недели в его название.
+
+    Параметры:
+    ----------
+    val : int
+        Число от 0 до 6, где 0 — понедельник, 6 — воскресенье.
+
+    Возвращает:
+    -------
+    str
+        Название дня недели.
+
+    Пример:
+    -------
+    >>> normalize_day_of_week(0)
+    'понедельник'
+    >>> normalize_day_of_week(5)
+    'суббота'
+    """
+    days = ["понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье"]
+    return days[val]
