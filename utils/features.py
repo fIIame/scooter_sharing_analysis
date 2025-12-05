@@ -68,7 +68,7 @@ def get_total_price(row: pd.Series, start_price: int = 30) -> float:
 
     Логика:
     ----------
-    - В понедельник с 6 до 10 утра берется только тариф за минуту, базовая плата не добавляется.
+    - В понедельник с 6 до 10 утра при использовании промо берется только тариф за минуту, плата за старт не добавляется.
     - В остальные дни/часы стоимость = start_price + duration_minutes * price_per_minute
     """
     day_of_week = row["day_of_week"]
@@ -77,34 +77,11 @@ def get_total_price(row: pd.Series, start_price: int = 30) -> float:
     duration_minutes = row["duration_minutes"]
     price_per_min = _get_price_per_minute(hour, day_of_week)
 
+    is_promo = row["promo"]
+
     if day_of_week == 0 and 6 <= hour < 10:
         total_price = price_per_min * duration_minutes
     else:
         total_price = start_price + duration_minutes * price_per_min
 
     return total_price
-
-
-def normalize_day_of_week(val: int) -> str:
-    """
-    Преобразует числовое значение дня недели в его название.
-
-    Параметры:
-    ----------
-    val : int
-        Число от 0 до 6, где 0 — понедельник, 6 — воскресенье.
-
-    Возвращает:
-    -------
-    str
-        Название дня недели.
-
-    Пример:
-    -------
-    >>> normalize_day_of_week(0)
-    'понедельник'
-    >>> normalize_day_of_week(5)
-    'суббота'
-    """
-    days = ["понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье"]
-    return days[val]

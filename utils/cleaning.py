@@ -1,5 +1,7 @@
 import re
+
 import pandas as pd
+import numpy as np
 
 
 def normalize_street(street_name: str) -> str:
@@ -56,6 +58,31 @@ def normalize_district(district_name: str) -> str:
     return district_name
 
 
+def normalize_day_of_week(val: int) -> str:
+    """
+    Преобразует числовое значение дня недели в его название.
+
+    Параметры:
+    ----------
+    val : int
+        Число от 0 до 6, где 0 — понедельник, 6 — воскресенье.
+
+    Возвращает:
+    -------
+    str
+        Название дня недели.
+
+    Пример:
+    -------
+    >>> normalize_day_of_week(0)
+    'понедельник'
+    >>> normalize_day_of_week(5)
+    'суббота'
+    """
+    days = ["понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье"]
+    return days[val]
+
+
 def drop_outlers(data: pd.DataFrame, factor: str, k: float) -> pd.DataFrame:
     """
     Удаляет выбросы из DataFrame по методу межквартильного размаха (IQR).
@@ -88,3 +115,62 @@ def drop_outlers(data: pd.DataFrame, factor: str, k: float) -> pd.DataFrame:
 
     filtered_data = data[(data[factor] >= lower) & (data[factor] <= upper)]
     return filtered_data
+
+
+def fill_na_median_by_group(df, cols, group_cols):
+    """
+    Заполняет пропущенные значения в указанных колонках медианой по заданным группам.
+
+    Параметры
+    ----------
+    df : pd.DataFrame
+        Исходный DataFrame.
+    cols : list[str]
+        Список колонок, в которых нужно заполнить пропуски.
+    group_cols : list[str]
+        Список колонок для группировки перед вычислением медианы.
+
+    Возвращает
+    -------
+    pd.DataFrame
+        Новый DataFrame с заполненными пропусками в указанных колонках.
+
+    Логика
+    ------
+    - Группируем данные по колонкам `group_cols`.
+    - Для каждой группы заполняем пропуски в колонках `cols` медианой группы.
+    - Если группа полностью пустая по данной колонке, остаются NaN.
+    """
+    for col in cols:
+        df[col] = df.groupby(group_cols)[col].transform(lambda s: s.fillna(s.median()))
+    return df
+
+
+def interpolate_time(df, cols, datetime_col='datetime'):
+    """
+    Заполняет пропущенные значения в указанных колонках методом линейной интерполяции по времени.
+
+    Параметры
+    ----------
+    df : pd.DataFrame
+        Исходный DataFrame с колонкой времени.
+    cols : list[str]
+        Список колонок, в которых нужно интерполировать пропуски.
+    datetime_col : str, default 'datetime'
+        Имя колонки с временными метками.
+
+    Возвращает
+    -------
+    pd.DataFrame
+        Новый DataFrame с интерполированными колонками.
+
+    Логика
+    ------
+    - Устанавливаем колонку `datetime_col` как индекс.
+    - Применяем метод интерполяции 'time' к колонкам `cols`.
+    - Сбрасываем индекс обратно, возвращая колонку времени.
+    """
+    df = df.set_index(datetime_col)
+    df[cols] = df[cols].interpolate(method='time')
+    df = df.reset_index()
+    return df
