@@ -1,3 +1,5 @@
+from typing import List
+
 import pandas as pd
 
 
@@ -81,3 +83,55 @@ def describe_categorical(df: pd.DataFrame, top_n: int = 30) -> None:
         print(f"- Top {top_n} most frequent values:")
         print(df[col].value_counts(dropna=False).head(top_n))
         print()
+
+
+def _check_consecutive_nans(data: pd.DataFrame, col: str):
+    """
+    Анализирует последовательные пропуски (NaN) в указанной колонке датафрейма.
+
+    Метод:
+    1. Определяет, какие значения в колонке являются NaN.
+    2. Нумерует последовательные блоки изменений (NaN -> не NaN и наоборот).
+    3. Вычисляет длину каждого блока NaN.
+    4. Выводит:
+       - количество блоков пропусков,
+       - максимальную длину блока,
+       - длины всех блоков.
+
+    Параметры:
+    ----------
+    df : pd.DataFrame
+        Датафрейм для анализа.
+    col : str
+        Имя колонки, в которой проверяются последовательные пропуски.
+
+    Пример использования:
+    --------------------
+    _check_consecutive_nans(weather_data, 'temperature')
+    """
+    is_na = data[col].isna()
+    # Нумеруем блоки, где значения изменяются (True -> False)
+    groups = (is_na != is_na.shift()).cumsum()
+    # Вычисляем длину каждого блока NaN
+    na_blocks = data[is_na].groupby(groups[is_na]).size()
+    if na_blocks.empty:
+        print(f"{col}: пропусков нет")
+    else:
+        print(f"{col}: {len(na_blocks)} блоков пропусков, максимальная длина {na_blocks.max()} строк")
+        print(f"Длины всех блоков: {na_blocks.tolist()}")
+
+
+def print_consecutive_nans(data: pd.DataFrame, cols_to_check: list[str]) -> None:
+    """
+    Проверяет и выводит информацию о последовательных пропусках (NaN) для указанных колонок.
+
+    Параметры:
+    ----------
+    data : pd.DataFrame
+        Датасет для анализа.
+    cols_to_check : list[str]
+        Список колонок, по которым нужно проверить последовательные пропуски.
+    """
+    for col in cols_to_check:
+        _check_consecutive_nans(data, col)
+        print("=" * 20)
