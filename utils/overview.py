@@ -3,28 +3,38 @@ import pandas as pd
 
 def get_missed_info(data: pd.DataFrame, rows: int, cols: int) -> None:
     """
-    Выводит информацию о пропущенных значениях в датафрейме.
+    Анализ пропусков в датафрейме.
+
+    Функция выводит расширенную статистику по отсутствующим значениям,
+    включая:
+    1. Общее число пропусков.
+    2. Долю пропущенных ячеек от общего числа.
+    3. Долю строк, содержащих хотя бы один пропуск.
+    4. Количество пропусков по каждому столбцу.
 
     Параметры:
     ----------
-        data (pd.DataFrame): Анализируемый датафрейм.
-        rows (int): Количество строк в датафрейме.
-        cols (int): Количество столбцов в датафрейме.
+    data : pd.DataFrame
+        Датафрейм, в котором проводится анализ пропусков.
 
     Возвращает:
     ----------
-        - Общее количество пропусков.
-        - Доля пропущенных ячеек в датафрейме.
-        - Доля строк, содержащих хотя бы один пропуск.
+    None
+        Функция выводит статистику в консоль и ничего не возвращает.
     """
-    missed_count = data.isnull().sum().sum()
-    missed_cells = missed_count / (rows * cols)
-    missed_rows = (data.isnull().sum(axis=1) > 0).sum() / rows
+    n_rows, n_cols = data.shape
 
-    print("\033[1m" + "\nПроверка пропусков" + "\033[0m")
-    print(f"Кол-во пропусков: {missed_count}")
-    print(f"Доля пропусков: {missed_cells:.1%}")
-    print(f"Доля строк с пропусками: {missed_rows:.1%}")
+    total_missing = data.isna().sum().sum()
+    missing_cell_ratio = total_missing / (n_rows * n_cols)
+    missing_row_ratio = (data.isna().any(axis=1)).mean()
+    missing_by_column = data.isna().sum()
+
+    print("\033[1m\nПроверка пропусков\033[0m")
+    print(f"Общее число пропусков: {total_missing}")
+    print(f"Доля пропущенных ячеек: {missing_cell_ratio:.1%}")
+    print(f"Доля строк с пропусками: {missing_row_ratio:.1%}\n")
+    print("Пропуски по столбцам:")
+    print(missing_by_column)
 
 
 def get_duplicated_info(data: pd.DataFrame) -> None:
