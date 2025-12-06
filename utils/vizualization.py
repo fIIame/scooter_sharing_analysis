@@ -9,7 +9,7 @@ import seaborn as sns
 
 def plot_hist_boxplot(
         data: pd.DataFrame,
-        cols: List[str],
+        columns: List[str],
         hue: Optional[str] = None,
         kde: bool = False,
         save_path: Optional[str] = None
@@ -37,12 +37,12 @@ def plot_hist_boxplot(
     None
     """
 
-    plot_rows = len(cols)
+    plot_rows = len(columns)
     fig, axes = plt.subplots(nrows=plot_rows, ncols=2, figsize=(14, 5 * plot_rows), squeeze=False)
 
     plt.rcParams.update({"font.size": 18})
 
-    for idx, col in enumerate(cols):
+    for idx, col in enumerate(columns):
         if hue is not None:
             sns.histplot(data=data, x=col, ax=axes[idx, 0], kde=kde, hue=hue)
             sns.boxplot(data=data, x=col, ax=axes[idx, 1], hue=hue)
@@ -80,6 +80,8 @@ def plot_categorial_pie(
         Список категориальных признаков для построения диаграмм.
     ncols : int, default=2
         Количество столбцов подграфиков.
+    save_path : Optional[str], default=None
+        Путь для сохранения изображения. Если None — показать на экране.
 
     Возвращает
     ----------
@@ -138,6 +140,8 @@ def plot_scatterplot(
         Переменная для раскраски точек по категориям.
     ncols : int, default=2
         Количество столбцов подграфиков.
+    save_path : Optional[str], default=None
+        Путь для сохранения изображения. Если None — показать на экране.
 
     Возвращает
     ----------
@@ -170,3 +174,56 @@ def plot_scatterplot(
         plt.savefig(save_path)
     plt.show()
     plt.close(fig)
+
+
+def plot_topn_bar(
+        data: pd.DataFrame,
+        columns: List[str],
+        n: int = 5,
+        ncols: int = 2,
+        save_path: Optional[str] = None
+) -> None:
+    """
+    Строит столбчатую диаграмму для топ-n наиболее частых значений Series.
+
+    Параметры
+    ----------
+    data : pd.DataFrame
+        Столбец с категориальными данными (например, start_location).
+    columns : List[str]
+        Список категориальных признаков для построения диаграмм.
+    n : int, default=5
+        Количество наиболее частых значений, которые будут отображены.
+    ncols : int, default=2
+        Количество столбцов подграфиков.
+    save_path : str, optional
+        Путь для сохранения изображения. Если None — график только отображается.
+
+    Возвращает
+    -------
+    None
+    """
+    plot_rows = int(np.ceil(len(columns) / ncols))
+    fig, axes = plt.subplots(nrows=plot_rows, ncols=ncols, figsize=(6 * ncols, 6 * plot_rows), squeeze=False)
+
+    for idx, col in enumerate(columns):
+        i, j = divmod(idx, ncols)
+
+        top_n = data[col].value_counts().head(n)
+        colors = sns.color_palette("pastel", n_colors=len(top_n))
+
+        axes[i, j].bar(top_n.index, top_n.values, color=colors)
+        axes[i, j].set_title(f"Топ {n}: {col}")
+        axes[i, j].set_xlabel(col)
+        axes[i, j].set_ylabel("Количество")
+        axes[i, j].tick_params(axis='x', rotation=45)
+
+    for ax in axes.flat[len(columns):]:
+        ax.remove()
+
+    plt.tight_layout()
+
+    if save_path:
+        plt.savefig(save_path)
+    plt.show()
+    plt.close()
