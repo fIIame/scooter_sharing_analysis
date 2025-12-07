@@ -79,7 +79,7 @@ def get_total_price(row: pd.Series, start_price: int = 30) -> float:
 
     is_promo = row["promo"]
 
-    if day_of_week == 0 and 6 <= hour < 10:
+    if day_of_week == 0 and 6 <= hour < 10 and is_promo:
         total_price = price_per_min * duration_minutes
     else:
         total_price = start_price + duration_minutes * price_per_min
