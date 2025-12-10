@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Callable
 
 import pandas as pd
 
@@ -135,3 +135,21 @@ def print_consecutive_nans(data: pd.DataFrame, cols_to_check: list[str]) -> None
     for col in cols_to_check:
         _check_consecutive_nans(data, col)
         print("=" * 20)
+
+
+def print_eta_correlation_overview(
+        data: pd.DataFrame,
+        factor: str,
+        metrics: List[str],
+        func: Callable
+) -> None:
+    for metric in metrics:
+        eta = func(data[factor], data[metric])
+        print(f"Влияние {factor} на {metric.replace('_', ' ')}:")
+        print(f"  eta-корреляция = {eta:.3f}")
+        if eta < 0.1:
+            print("  Слабое влияние\n")
+        elif eta < 0.3:
+            print("  Умеренное влияние\n")
+        else:
+            print("  Сильное влияние\n")
