@@ -1,4 +1,4 @@
-from typing import List, Callable
+from typing import List, Dict, Callable
 
 import pandas as pd
 
@@ -153,3 +153,88 @@ def print_eta_correlation_overview(
             print("  Умеренное влияние\n")
         else:
             print("  Сильное влияние\n")
+
+
+def print_conversion(data: pd.DataFrame, column: str, positive_value: str) -> None:
+    """
+    Выводит конверсию по бинарному категориальному признаку.
+
+    Параметры:
+    ----------
+    data : pd.DataFrame
+        Датафрейм с данными.
+    column : str
+        Название колонки, где содержится бинарный признак (например, 'promo').
+    positive_value : str
+        Значение, которое считается "успешным" (например, 'Да').
+
+    Возвращает:
+    ----------
+    None
+        Просто печатает конверсию в удобном формате.
+    """
+    total = data.shape[0]
+    positive = data[data[column] == positive_value].shape[0]
+
+    conversion = positive / total if total > 0 else 0
+
+    print("\033[1mКонверсия\033[0m")
+    print(f"{column} = {positive_value}: {conversion:.1%} ({positive} из {total})\n")
+
+
+def calculate_promo_roi(
+        df: pd.DataFrame,
+        promo_col: str = "promo",
+        price_col: str = "total_price",
+        promo_value: str = "Да",
+        promo_cost_per_ride: float = 30,
+        display: bool = True
+) -> Dict[str, float]:
+    """
+    Рассчитывает ROI промо-акции с цветным выводом.
+
+    Параметры:
+    ----------
+    df : pd.DataFrame
+        Датасет с поездками.
+    promo_col : str
+        Название колонки с информацией о промо.
+    price_col : str
+        Название колонки с ценой поездки.
+    promo_value : str
+        Значение, указывающее на поездку с промо.
+    promo_cost_per_ride : float
+        Стоимость проведения промо на одну поездку.
+    display : bool
+        Выводить ли результаты в консоль.
+
+    Возвращает:
+    ----------
+    dict : словарь с ключами
+        baseline_revenue, revenue_promo, incremental_profit, promo_cost, roi, roi_percent
+    """
+    promo_rides = df[df[promo_col] == promo_value]
+    no_promo_rides = df[df[promo_col] != promo_value]
+
+    mean_no_promo = no_promo_rides[price_col].mean()
+    baseline_revenue = mean_no_promo * promo_rides.shape[0]
+    revenue_promo = promo_rides[price_col].sum()
+    incremental_profit = revenue_promo - baseline_revenue
+    promo_cost = promo_rides.shape[0] * promo_cost_per_ride
+    roi = incremental_profit / promo_cost
+    roi_percent = roi * 100
+
+    print(f"Baseline выручка: {baseline_revenue:_.0f} руб.")
+    print(f"Фактическая выручка по промо: {revenue_promo:_.0f} руб.")
+    print(f"Инкрементальная прибыль: {incremental_profit:_.0f} руб.")
+    print(f"Издержки на промо: {promo_cost:_.0f} руб.")
+
+    # Цветной ROI
+    if roi_percent >= 0:
+        color = "\033[92m"  # зеленый
+        status = "положительный"
+    else:
+        color = "\033[91m"  # красный
+        status = "отрицательный"
+    reset = "\033[0m"
+    print(f"ROI: {color}{roi_percent:.1f}% ({status}){reset}")
