@@ -79,7 +79,15 @@ def normalize_day_of_week(val: int) -> str:
     >>> normalize_day_of_week(5)
     'суббота'
     """
-    days = ["понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье"]
+    days = [
+        "понедельник",
+        "вторник",
+        "среда",
+        "четверг",
+        "пятница",
+        "суббота",
+        "воскресенье",
+    ]
     return days[val]
 
 
@@ -146,7 +154,7 @@ def fill_na_median_by_group(df, cols, group_cols):
     return df
 
 
-def interpolate_time(df, cols, datetime_col='datetime'):
+def interpolate_time(df, cols, datetime_col="datetime"):
     """
     Заполняет пропущенные значения в указанных колонках методом линейной интерполяции по времени.
 
@@ -171,6 +179,6 @@ def interpolate_time(df, cols, datetime_col='datetime'):
     - Сбрасываем индекс обратно, возвращая колонку времени.
     """
     df = df.set_index(datetime_col)
-    df[cols] = df[cols].interpolate(method='time')
+    df[cols] = df[cols].interpolate(method="time")
     df = df.reset_index()
     return df
