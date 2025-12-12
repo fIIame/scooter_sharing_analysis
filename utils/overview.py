@@ -187,7 +187,6 @@ def calculate_promo_roi(
     price_col: str = "total_price",
     promo_value: str = "Да",
     promo_cost_per_ride: float = 30,
-    display: bool = True,
 ) -> Dict[str, float]:
     """
     Рассчитывает ROI промо-акции с цветным выводом.

@@ -1,4 +1,5 @@
 from typing import List, Optional
+from pathlib import PosixPath
 
 import numpy as np
 import pandas as pd
@@ -10,9 +11,10 @@ import seaborn as sns
 def plot_hist_boxplot(
     data: pd.DataFrame,
     columns: List[str],
+    ncols: int = 2,
     hue: Optional[str] = None,
     kde: bool = False,
-    save_path: Optional[str] = None,
+    save_path: Optional[PosixPath] = None,
 ) -> None:
     """
     Строит гистограмму и boxplot (ящик с усами) для указанных числовых признаков.
@@ -37,9 +39,9 @@ def plot_hist_boxplot(
     None
     """
 
-    plot_rows = len(columns)
+    plot_rows = int(np.ceil(len(columns) / ncols))
     fig, axes = plt.subplots(
-        nrows=plot_rows, ncols=2, figsize=(14, 5 * plot_rows), squeeze=False
+        nrows=plot_rows, ncols=ncols, figsize=(14, 5 * plot_rows), squeeze=False
     )
 
     plt.rcParams.update({"font.size": 18})
@@ -71,7 +73,7 @@ def plot_categorial_pie(
     data: pd.DataFrame,
     columns: List[str],
     ncols: int = 2,
-    save_path: Optional[str] = None,
+    save_path: Optional[PosixPath] = None,
 ) -> None:
     """
     Строит круговые диаграммы (pie chart) для категориальных признаков.
@@ -133,7 +135,7 @@ def plot_scatterplot(
     ys: List[str],
     hue: Optional[str] = None,
     ncols: int = 2,
-    save_path: Optional[str] = None,
+    save_path: Optional[PosixPath] = None,
 ) -> None:
     """
     Строит scatterplot (диаграммы рассеяния) для нескольких признаков относительно одного x.
@@ -195,7 +197,7 @@ def plot_topn_bar(
     columns: List[str],
     n: int = 5,
     ncols: int = 2,
-    save_path: Optional[str] = None,
+    save_path: Optional[PosixPath] = None,
 ) -> None:
     """
     Строит столбчатую диаграмму для топ-n наиболее частых значений Series.

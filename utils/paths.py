@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-def path_join(
+def join_path(
         *parts, _base_path: Path = Path(__file__).resolve().parent.parent
 ) -> Path:
     """
@@ -40,10 +40,3 @@ def path_join(
     for part in parts:
         _base_path = _base_path / part
     return _base_path
-
-
-# Алиас для краткого использования
-pj = path_join
-
-# Путь к домашней директории (два уровня выше текущего файла)
-HOME = pj()
