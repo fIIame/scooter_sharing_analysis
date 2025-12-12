@@ -8,11 +8,11 @@ import seaborn as sns
 
 
 def plot_hist_boxplot(
-        data: pd.DataFrame,
-        columns: List[str],
-        hue: Optional[str] = None,
-        kde: bool = False,
-        save_path: Optional[str] = None
+    data: pd.DataFrame,
+    columns: List[str],
+    hue: Optional[str] = None,
+    kde: bool = False,
+    save_path: Optional[str] = None,
 ) -> None:
     """
     Строит гистограмму и boxplot (ящик с усами) для указанных числовых признаков.
@@ -38,7 +38,9 @@ def plot_hist_boxplot(
     """
 
     plot_rows = len(columns)
-    fig, axes = plt.subplots(nrows=plot_rows, ncols=2, figsize=(14, 5 * plot_rows), squeeze=False)
+    fig, axes = plt.subplots(
+        nrows=plot_rows, ncols=2, figsize=(14, 5 * plot_rows), squeeze=False
+    )
 
     plt.rcParams.update({"font.size": 18})
 
@@ -54,7 +56,9 @@ def plot_hist_boxplot(
         axes[idx, 1].set_xlabel(col)
         axes[idx, 0].set_ylabel("Количество")
 
-    plt.suptitle("Гистограмма и ящик с усами количественных признаков", fontsize=22, y=1.01)
+    plt.suptitle(
+        "Гистограмма и ящик с усами количественных признаков", fontsize=22, y=1.01
+    )
     fig.tight_layout()
 
     if save_path:
@@ -64,10 +68,10 @@ def plot_hist_boxplot(
 
 
 def plot_categorial_pie(
-        data: pd.DataFrame,
-        columns: List[str],
-        ncols: int = 2,
-        save_path: Optional[str] = None
+    data: pd.DataFrame,
+    columns: List[str],
+    ncols: int = 2,
+    save_path: Optional[str] = None,
 ) -> None:
     """
     Строит круговые диаграммы (pie chart) для категориальных признаков.
@@ -88,24 +92,30 @@ def plot_categorial_pie(
     None
     """
 
-    plt.rcParams.update({
-        "axes.labelsize": 12,
-        "figure.titlesize": 12,
-        "xtick.labelsize": 10,
-        "ytick.labelsize": 10
-    })
+    plt.rcParams.update(
+        {
+            "axes.labelsize": 12,
+            "figure.titlesize": 12,
+            "xtick.labelsize": 10,
+            "ytick.labelsize": 10,
+        }
+    )
 
     plot_rows = int(np.ceil(len(columns) / ncols))
-    fig, axes = plt.subplots(nrows=plot_rows, ncols=ncols, figsize=(6 * ncols, 6 * plot_rows), squeeze=False)
+    fig, axes = plt.subplots(
+        nrows=plot_rows, ncols=ncols, figsize=(6 * ncols, 6 * plot_rows), squeeze=False
+    )
 
     for idx, column in enumerate(columns):
         i, j = divmod(idx, ncols)
         counts = data[column].value_counts()
         colors = sns.color_palette("pastel", n_colors=len(counts))
-        axes[i, j].pie(counts.values, labels=counts.index, colors=colors, autopct="%1.1f%%")
+        axes[i, j].pie(
+            counts.values, labels=counts.index, colors=colors, autopct="%1.1f%%"
+        )
         axes[i, j].set_title(column)
 
-    for ax in axes.flat[len(columns):]:
+    for ax in axes.flat[len(columns) :]:
         ax.remove()
 
     plt.suptitle("Круговые диаграммы категориальных признаков", fontsize=22, y=1.01)
@@ -118,12 +128,12 @@ def plot_categorial_pie(
 
 
 def plot_scatterplot(
-        data: pd.DataFrame,
-        x: str,
-        ys: List[str],
-        hue: Optional[str] = None,
-        ncols: int = 2,
-        save_path: Optional[str] = None
+    data: pd.DataFrame,
+    x: str,
+    ys: List[str],
+    hue: Optional[str] = None,
+    ncols: int = 2,
+    save_path: Optional[str] = None,
 ) -> None:
     """
     Строит scatterplot (диаграммы рассеяния) для нескольких признаков относительно одного x.
@@ -149,7 +159,9 @@ def plot_scatterplot(
     """
 
     plot_rows = int(np.ceil(len(ys) / ncols))
-    fig, axes = plt.subplots(plot_rows, ncols=ncols, figsize=(7 * ncols, 6 * plot_rows), squeeze=False)
+    fig, axes = plt.subplots(
+        plot_rows, ncols=ncols, figsize=(7 * ncols, 6 * plot_rows), squeeze=False
+    )
 
     for idx, y in enumerate(ys):
         i, j = divmod(idx, ncols)
@@ -164,10 +176,12 @@ def plot_scatterplot(
         ax.set_ylabel(y)
         ax.set_title(f"Зависимость между {y} и {x}")
 
-    for ax in axes.flat[len(ys):]:
+    for ax in axes.flat[len(ys) :]:
         ax.set_visible(False)
 
-    plt.suptitle(f"Диаграммы рассеяния относительно признака '{x}'", fontsize=22, y=1.01)
+    plt.suptitle(
+        f"Диаграммы рассеяния относительно признака '{x}'", fontsize=22, y=1.01
+    )
     fig.tight_layout()
 
     if save_path:
@@ -177,11 +191,11 @@ def plot_scatterplot(
 
 
 def plot_topn_bar(
-        data: pd.DataFrame,
-        columns: List[str],
-        n: int = 5,
-        ncols: int = 2,
-        save_path: Optional[str] = None
+    data: pd.DataFrame,
+    columns: List[str],
+    n: int = 5,
+    ncols: int = 2,
+    save_path: Optional[str] = None,
 ) -> None:
     """
     Строит столбчатую диаграмму для топ-n наиболее частых значений Series.
@@ -204,7 +218,9 @@ def plot_topn_bar(
     None
     """
     plot_rows = int(np.ceil(len(columns) / ncols))
-    fig, axes = plt.subplots(nrows=plot_rows, ncols=ncols, figsize=(6 * ncols, 6 * plot_rows), squeeze=False)
+    fig, axes = plt.subplots(
+        nrows=plot_rows, ncols=ncols, figsize=(6 * ncols, 6 * plot_rows), squeeze=False
+    )
 
     for idx, col in enumerate(columns):
         i, j = divmod(idx, ncols)
@@ -216,9 +232,9 @@ def plot_topn_bar(
         axes[i, j].set_title(f"Топ {n}: {col}")
         axes[i, j].set_xlabel(col)
         axes[i, j].set_ylabel("Количество")
-        axes[i, j].tick_params(axis='x', rotation=45)
+        axes[i, j].tick_params(axis="x", rotation=45)
 
-    for ax in axes.flat[len(columns):]:
+    for ax in axes.flat[len(columns) :]:
         ax.remove()
 
     plt.tight_layout()

@@ -3,7 +3,9 @@ import pandas as pd
 from scipy.stats import ttest_ind, mannwhitneyu, pearsonr, spearmanr, f_oneway
 
 
-def mannwhitneyu_test(data: pd.DataFrame, target: str, factor: str, alternative: str, alpha: int = 0.05) -> None:
+def mannwhitneyu_test(
+    data: pd.DataFrame, target: str, factor: str, alternative: str, alpha: int = 0.05
+) -> None:
     """
     Выполняет тест Манна–Уитни для сравнения двух групп по количественному признаку.
 
@@ -28,7 +30,9 @@ def mannwhitneyu_test(data: pd.DataFrame, target: str, factor: str, alternative:
     print(msg)
 
 
-def student_test(data: pd.DataFrame, target: str, factor: str, alternative: str, alpha: int = 0.05) -> None:
+def student_test(
+    data: pd.DataFrame, target: str, factor: str, alternative: str, alpha: int = 0.05
+) -> None:
     """
     Выполняет тест Стьюдента для сравнения двух групп по количественному признаку.
 
@@ -97,7 +101,9 @@ def pearson_correlation(data: pd.DataFrame, x: str, y: str, alpha: int = 0.05) -
     print(msg)
 
 
-def anova_test(data: pd.DataFrame, target: str, factor: str, alpha: float = 0.05) -> None:
+def anova_test(
+    data: pd.DataFrame, target: str, factor: str, alpha: float = 0.05
+) -> None:
     """
     Выполняет однофакторный ANOVA-тест для количественного признака по категориям.
 

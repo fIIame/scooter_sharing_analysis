@@ -117,7 +117,9 @@ def _check_consecutive_nans(data: pd.DataFrame, col: str):
     if na_blocks.empty:
         print(f"{col}: пропусков нет")
     else:
-        print(f"{col}: {len(na_blocks)} блоков пропусков, максимальная длина {na_blocks.max()} строк")
+        print(
+            f"{col}: {len(na_blocks)} блоков пропусков, максимальная длина {na_blocks.max()} строк"
+        )
         print(f"Длины всех блоков: {na_blocks.tolist()}")
 
 
@@ -138,10 +140,7 @@ def print_consecutive_nans(data: pd.DataFrame, cols_to_check: list[str]) -> None
 
 
 def print_eta_correlation_overview(
-        data: pd.DataFrame,
-        factor: str,
-        metrics: List[str],
-        func: Callable
+    data: pd.DataFrame, factor: str, metrics: List[str], func: Callable
 ) -> None:
     for metric in metrics:
         eta = func(data[factor], data[metric])
@@ -183,12 +182,12 @@ def print_conversion(data: pd.DataFrame, column: str, positive_value: str) -> No
 
 
 def calculate_promo_roi(
-        df: pd.DataFrame,
-        promo_col: str = "promo",
-        price_col: str = "total_price",
-        promo_value: str = "Да",
-        promo_cost_per_ride: float = 30,
-        display: bool = True
+    df: pd.DataFrame,
+    promo_col: str = "promo",
+    price_col: str = "total_price",
+    promo_value: str = "Да",
+    promo_cost_per_ride: float = 30,
+    display: bool = True,
 ) -> Dict[str, float]:
     """
     Рассчитывает ROI промо-акции с цветным выводом.
