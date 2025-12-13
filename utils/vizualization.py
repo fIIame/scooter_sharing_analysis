@@ -39,7 +39,7 @@ def plot_hist_boxplot(
     None
     """
 
-    plot_rows = int(np.ceil(len(columns) / ncols))
+    plot_rows = len(columns)
     fig, axes = plt.subplots(
         nrows=plot_rows, ncols=ncols, figsize=(14, 5 * plot_rows), squeeze=False
     )
