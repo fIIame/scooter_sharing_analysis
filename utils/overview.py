@@ -180,3 +180,46 @@ def print_did_avg_price(
     """
     price_effect = (mon_morning_avg_price - mon_midday_avg_price) - (control_morning_avg_price - control_midday_avg_price)
     print(f"Эффект на среднюю цену (Difference-in-Differences): {price_effect:.1f} ₽")
+
+
+def print_model_metrics(
+        y_true: pd.Series,
+        y_pred: pd.Series,
+        mae_threshold: float = None,
+        r2_threshold: float = None
+) -> None:
+    """
+    Выводит R^2 и MAE модели, окрашивая в зеленый при хороших значениях и красный при плохих.
+
+    Параметры:
+    ----------
+    y_true : pd.Series
+        Фактические значения целевой переменной.
+    y_pred : pd.Series
+        Предсказанные значения модели.
+    mae_threshold : float, optional
+        Порог для MAE. MAE меньше порога → зеленый, иначе красный.
+        Если None, цвет по умолчанию (без окраски).
+    r2_threshold : float, optional
+        Порог для R^2. R^2 больше порога → зеленый, иначе красный.
+        Если None, цвет по умолчанию (без окраски).
+    """
+    r2 = r2_score(y_true, y_pred)
+    mae = mean_absolute_error(y_true, y_pred)
+
+    GREEN = "\033[92m"
+    RED = "\033[91m"
+    RESET = "\033[0m"
+
+    # цветные R^2 и MAE
+    if r2_threshold is not None:
+        r2_str = f"{GREEN}{r2:.2f}{RESET}" if r2 >= r2_threshold else f"{RED}{r2:.2f}{RESET}"
+    else:
+        r2_str = f"{r2:.2f}"
+
+    if mae_threshold is not None:
+        mae_str = f"{GREEN}{mae:.2f}{RESET}" if mae <= mae_threshold else f"{RED}{mae:.2f}{RESET}"
+    else:
+        mae_str = f"{mae:.2f}"
+
+    print(f"R^2: {r2_str} | MAE: {mae_str}")
