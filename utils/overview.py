@@ -1,11 +1,11 @@
-from typing import List, Dict, Callable
+from typing import Callable, List
 
 import pandas as pd
 
 from sklearn.metrics import r2_score, mean_absolute_error
 
 
-def print_missed_info(data: pd.DataFrame, rows: int, cols: int) -> None:
+def print_missed_info(data: pd.DataFrame) -> None:
     """
     Анализ пропусков в датафрейме.
 
@@ -125,7 +125,7 @@ def _check_consecutive_nans(data: pd.DataFrame, col: str):
         print(f"Длины всех блоков: {na_blocks.tolist()}")
 
 
-def print_consecutive_nans(data: pd.DataFrame, cols_to_check: list[str]) -> None:
+def print_consecutive_nans(data: pd.DataFrame, cols_to_check: List[str]) -> None:
     """
     Проверяет и выводит информацию о последовательных пропусках (NaN) для указанных колонок.
 
@@ -133,7 +133,7 @@ def print_consecutive_nans(data: pd.DataFrame, cols_to_check: list[str]) -> None
     ----------
     data : pd.DataFrame
         Датасет для анализа.
-    cols_to_check : list[str]
+    cols_to_check : List[str]
         Список колонок, по которым нужно проверить последовательные пропуски.
     """
     for col in cols_to_check:
@@ -142,18 +142,42 @@ def print_consecutive_nans(data: pd.DataFrame, cols_to_check: list[str]) -> None
 
 
 def print_eta_correlation_overview(
-    data: pd.DataFrame, factor: str, metrics: List[str], func: Callable
+    data: pd.DataFrame,
+    factor: str,
+    metric: str,
+    func: Callable
 ) -> None:
-    for metric in metrics:
-        eta = func(data[factor], data[metric])
-        print(f"Влияние {factor} на {metric.replace('_', ' ')}:")
-        print(f"  eta-корреляция = {eta:.3f}")
-        if eta < 0.1:
-            print("  Слабое влияние\n")
-        elif eta < 0.3:
-            print("  Умеренное влияние\n")
-        else:
-            print("  Сильное влияние\n")
+    """
+    Вычисляет и печатает коэффициент η (eta) для количественного признака относительно категориального фактора.
+
+    Параметры
+    ----------
+    data : pd.DataFrame
+        Датасет с данными.
+    factor : str
+        Название категориального признака (фактора), влияние которого оценивается.
+    metric : str
+        Название количественного признака (метрики), для которого вычисляется корреляция.
+    func : Callable
+        Функция, вычисляющая коэффициент η. Должна принимать два аргумента: фактор и метрику.
+
+    Возвращает
+    ----------
+    None
+        Функция выводит результат в консоль:
+        - значение η-корреляции
+        - уровень влияния ('Слабое', 'Умеренное', 'Сильное').
+    """
+
+    eta = func(data[factor], data[metric])
+    print(f"Влияние {factor} на {metric.replace('_', ' ')}:")
+    print(f"  eta-корреляция = {eta:.3f}")
+    if eta < 0.1:
+        print("  Слабое влияние\n")
+    elif eta < 0.3:
+        print("  Умеренное влияние\n")
+    else:
+        print("  Сильное влияние\n")
 
 
 def print_did_revenue(
@@ -163,7 +187,23 @@ def print_did_revenue(
     control_midday_revenue: float
 ) -> None:
     """
-    Печатает инкрементальный эффект на выручку через Difference-in-Differences.
+    Вычисляет и печатает инкрементальную выручку с использованием подхода Difference-in-Differences (DiD).
+
+    Параметры
+    ----------
+    mon_morning_revenue : float
+        Выручка в экспериментальной группе утром.
+    mon_midday_revenue : float
+        Выручка в экспериментальной группе в полдень.
+    control_morning_revenue : float
+        Выручка в контрольной группе утром.
+    control_midday_revenue : float
+        Выручка в контрольной группе в полдень.
+
+    Возвращает
+    ----------
+    None
+        Функция выводит в консоль значение инкрементальной выручки.
     """
     incremental_revenue = (mon_morning_revenue - mon_midday_revenue) - (control_morning_revenue - control_midday_revenue)
     print(f"Инкрементальная выручка (Difference-in-Differences): {incremental_revenue:.0f} ₽")
@@ -176,7 +216,23 @@ def print_did_avg_price(
     control_midday_avg_price: float
 ) -> None:
     """
-    Печатает инкрементальный эффект на среднюю цену через Difference-in-Differences.
+    Вычисляет и печатает эффект Difference-in-Differences на среднюю цену поездки.
+
+    Параметры
+    ----------
+    mon_morning_avg_price : float
+        Средняя цена в экспериментальной группе утром.
+    mon_midday_avg_price : float
+        Средняя цена в экспериментальной группе в полдень (или в контрольный период).
+    control_morning_avg_price : float
+        Средняя цена в контрольной группе утром.
+    control_midday_avg_price : float
+        Средняя цена в контрольной группе в полдень (или в контрольный период).
+
+    Возвращает
+    ----------
+    None
+        Функция выводит в консоль значение эффекта на среднюю цену.
     """
     price_effect = (mon_morning_avg_price - mon_midday_avg_price) - (control_morning_avg_price - control_midday_avg_price)
     print(f"Эффект на среднюю цену (Difference-in-Differences): {price_effect:.1f} ₽")

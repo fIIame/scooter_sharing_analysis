@@ -215,7 +215,11 @@ def _create_traffic_df(
     return traffic_df
 
 
-def create_departures_df(data: pd.DataFrame, period: str, start_point: str = "start_location") -> pd.DataFrame:
+def create_departures_df(
+        data: pd.DataFrame,
+        period: str,
+        start_point: str = "start_location"
+) -> pd.DataFrame:
     """
     Создает DataFrame с количеством отправлений по точкам за указанный период.
 
@@ -241,7 +245,11 @@ def create_departures_df(data: pd.DataFrame, period: str, start_point: str = "st
     )
 
 
-def create_arrivals_df(data: pd.DataFrame, period: str, end_point: str = "end_location") -> pd.DataFrame:
+def create_arrivals_df(
+        data: pd.DataFrame,
+        period: str,
+        end_point: str = "end_location"
+) -> pd.DataFrame:
     """
     Создает DataFrame с количеством прибытий по точкам за указанный период.
 

@@ -2,7 +2,8 @@ from pathlib import Path
 
 
 def join_path(
-        *parts, _base_path: Path = Path(__file__).resolve().parent.parent
+        *parts,
+        _base_path: Path = Path(__file__).resolve().parent.parent
 ) -> Path:
     """
     Создает объект Path путем последовательного объединения частей пути.

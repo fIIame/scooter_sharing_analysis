@@ -4,10 +4,7 @@ from sklearn.preprocessing import OneHotEncoder
 from typing import Tuple, List
 
 
-def build_hourly_dataset(
-    data: pd.DataFrame,
-    timestamp_col: str = "hour_timestamp",
-) -> pd.DataFrame:
+def build_hourly_dataset(data: pd.DataFrame, timestamp_col: str = "hour_timestamp") -> pd.DataFrame:
     """
     Формирует почасовой датасет спроса на основе данных о поездках.
 

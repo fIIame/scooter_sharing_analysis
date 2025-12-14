@@ -1,7 +1,7 @@
 import re
+from typing import List
 
 import pandas as pd
-import numpy as np
 
 
 def normalize_street(street_name: str) -> str:
@@ -91,7 +91,11 @@ def normalize_day_of_week(val: int) -> str:
     return days[val]
 
 
-def drop_outlers(data: pd.DataFrame, factor: str, k: float) -> pd.DataFrame:
+def drop_outlers(
+        data: pd.DataFrame,
+        factor: str,
+        k: float
+) -> pd.DataFrame:
     """
     Удаляет выбросы из DataFrame по методу межквартильного размаха (IQR).
 
@@ -125,13 +129,17 @@ def drop_outlers(data: pd.DataFrame, factor: str, k: float) -> pd.DataFrame:
     return filtered_data
 
 
-def fill_na_median_by_group(df, cols, group_cols):
+def fill_na_median_by_group(
+        data: pd.DataFrame,
+        cols: List[str],
+        group_cols: List[str]
+) -> pd.DataFrame:
     """
     Заполняет пропущенные значения в указанных колонках медианой по заданным группам.
 
     Параметры
     ----------
-    df : pd.DataFrame
+    data : pd.DataFrame
         Исходный DataFrame.
     cols : list[str]
         Список колонок, в которых нужно заполнить пропуски.
@@ -150,19 +158,23 @@ def fill_na_median_by_group(df, cols, group_cols):
     - Если группа полностью пустая по данной колонке, остаются NaN.
     """
     for col in cols:
-        df[col] = df.groupby(group_cols)[col].transform(lambda s: s.fillna(s.median()))
-    return df
+        data[col] = data.groupby(group_cols)[col].transform(lambda s: s.fillna(s.median()))
+    return data
 
 
-def interpolate_time(df, cols, datetime_col="datetime"):
+def interpolate_time(
+        data: pd.DataFrame,
+        cols: List[str],
+        datetime_col="datetime"
+) -> pd.DataFrame:
     """
     Заполняет пропущенные значения в указанных колонках методом линейной интерполяции по времени.
 
     Параметры
     ----------
-    df : pd.DataFrame
+    data : pd.DataFrame
         Исходный DataFrame с колонкой времени.
-    cols : list[str]
+    cols : List[str]
         Список колонок, в которых нужно интерполировать пропуски.
     datetime_col : str, default 'datetime'
         Имя колонки с временными метками.
@@ -178,7 +190,7 @@ def interpolate_time(df, cols, datetime_col="datetime"):
     - Применяем метод интерполяции 'time' к колонкам `cols`.
     - Сбрасываем индекс обратно, возвращая колонку времени.
     """
-    df = df.set_index(datetime_col)
-    df[cols] = df[cols].interpolate(method="time")
-    df = df.reset_index()
-    return df
+    data = data.set_index(datetime_col)
+    data[cols] = data[cols].interpolate(method="time")
+    data = data.reset_index()
+    return data

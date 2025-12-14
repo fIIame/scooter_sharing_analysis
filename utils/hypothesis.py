@@ -4,7 +4,11 @@ from scipy.stats import ttest_ind, mannwhitneyu, pearsonr, spearmanr, f_oneway
 
 
 def mannwhitneyu_test(
-    data: pd.DataFrame, target: str, factor: str, alternative: str, alpha: int = 0.05
+    data: pd.DataFrame,
+    target: str,
+    factor: str,
+    alternative: str = "two-sided",
+    alpha: float = 0.05
 ) -> None:
     """
     Выполняет тест Манна–Уитни для сравнения двух групп по количественному признаку.
@@ -17,8 +21,10 @@ def mannwhitneyu_test(
         Название количественного признака.
     factor : str
         Название категориального признака с двумя группами.
-    alternative : str
+    alternative : str, default='two-sided'
         Альтернатива: 'two-sided', 'less', 'greater'.
+    alpha : float, default=0.05
+        Уровень значимости теста.
     """
     groups = data.groupby(factor)[target].apply(list)
     stat, p = mannwhitneyu(*groups, alternative=alternative)
@@ -31,7 +37,11 @@ def mannwhitneyu_test(
 
 
 def student_test(
-    data: pd.DataFrame, target: str, factor: str, alternative: str, alpha: int = 0.05
+    data: pd.DataFrame,
+    target: str,
+    factor: str,
+    alternative: str,
+    alpha: int = 0.05
 ) -> None:
     """
     Выполняет тест Стьюдента для сравнения двух групп по количественному признаку.
@@ -57,7 +67,12 @@ def student_test(
     print(msg)
 
 
-def spearman_correlation(data: pd.DataFrame, x: str, y: str, alpha: int = 0.05) -> None:
+def spearman_correlation(
+        data: pd.DataFrame,
+        x: str,
+        y: str,
+        alpha: int = 0.05
+) -> None:
     """
     Выполняет корреляцию Спирмена между двумя количественными признаками.
 
@@ -79,7 +94,12 @@ def spearman_correlation(data: pd.DataFrame, x: str, y: str, alpha: int = 0.05) 
     print(msg)
 
 
-def pearson_correlation(data: pd.DataFrame, x: str, y: str, alpha: int = 0.05) -> None:
+def pearson_correlation(
+        data: pd.DataFrame,
+        x: str,
+        y: str,
+        alpha: int = 0.05
+) -> None:
     """
     Выполняет корреляцию Пирсона между двумя количественными признаками.
 
@@ -102,7 +122,10 @@ def pearson_correlation(data: pd.DataFrame, x: str, y: str, alpha: int = 0.05) -
 
 
 def anova_test(
-    data: pd.DataFrame, target: str, factor: str, alpha: float = 0.05
+    data: pd.DataFrame,
+    target: str,
+    factor: str,
+    alpha: float = 0.05
 ) -> None:
     """
     Выполняет однофакторный ANOVA-тест для количественного признака по категориям.
