@@ -2,8 +2,10 @@ from typing import List, Dict, Callable
 
 import pandas as pd
 
+from sklearn.metrics import r2_score, mean_absolute_error
 
-def get_missed_info(data: pd.DataFrame, rows: int, cols: int) -> None:
+
+def print_missed_info(data: pd.DataFrame, rows: int, cols: int) -> None:
     """
     Анализ пропусков в датафрейме.
 
@@ -39,7 +41,7 @@ def get_missed_info(data: pd.DataFrame, rows: int, cols: int) -> None:
     print(missing_by_column)
 
 
-def get_duplicated_info(data: pd.DataFrame) -> None:
+def print_duplicated_info(data: pd.DataFrame) -> None:
     """
     Выводит информацию о количестве дубликатов в датафрейме.
 
@@ -154,85 +156,27 @@ def print_eta_correlation_overview(
             print("  Сильное влияние\n")
 
 
-def print_conversion(data: pd.DataFrame, column: str, positive_value: str) -> None:
+def print_did_revenue(
+    mon_morning_revenue: float,
+    mon_midday_revenue: float,
+    control_morning_revenue: float,
+    control_midday_revenue: float
+) -> None:
     """
-    Выводит конверсию по бинарному категориальному признаку.
-
-    Параметры:
-    ----------
-    data : pd.DataFrame
-        Датафрейм с данными.
-    column : str
-        Название колонки, где содержится бинарный признак (например, 'promo').
-    positive_value : str
-        Значение, которое считается "успешным" (например, 'Да').
-
-    Возвращает:
-    ----------
-    None
-        Просто печатает конверсию в удобном формате.
+    Печатает инкрементальный эффект на выручку через Difference-in-Differences.
     """
-    total = data.shape[0]
-    positive = data[data[column] == positive_value].shape[0]
-
-    conversion = positive / total if total > 0 else 0
-
-    print("\033[1mКонверсия\033[0m")
-    print(f"{column} = {positive_value}: {conversion:.1%} ({positive} из {total})\n")
+    incremental_revenue = (mon_morning_revenue - mon_midday_revenue) - (control_morning_revenue - control_midday_revenue)
+    print(f"Инкрементальная выручка (Difference-in-Differences): {incremental_revenue:.0f} ₽")
 
 
-def calculate_promo_roi(
-    df: pd.DataFrame,
-    promo_col: str = "promo",
-    price_col: str = "total_price",
-    promo_value: str = "Да",
-    promo_cost_per_ride: float = 30,
-) -> Dict[str, float]:
+def print_did_avg_price(
+    mon_morning_avg_price: float,
+    mon_midday_avg_price: float,
+    control_morning_avg_price: float,
+    control_midday_avg_price: float
+) -> None:
     """
-    Рассчитывает ROI промо-акции с цветным выводом.
-
-    Параметры:
-    ----------
-    df : pd.DataFrame
-        Датасет с поездками.
-    promo_col : str
-        Название колонки с информацией о промо.
-    price_col : str
-        Название колонки с ценой поездки.
-    promo_value : str
-        Значение, указывающее на поездку с промо.
-    promo_cost_per_ride : float
-        Стоимость проведения промо на одну поездку.
-    display : bool
-        Выводить ли результаты в консоль.
-
-    Возвращает:
-    ----------
-    dict : словарь с ключами
-        baseline_revenue, revenue_promo, incremental_profit, promo_cost, roi, roi_percent
+    Печатает инкрементальный эффект на среднюю цену через Difference-in-Differences.
     """
-    promo_rides = df[df[promo_col] == promo_value]
-    no_promo_rides = df[df[promo_col] != promo_value]
-
-    mean_no_promo = no_promo_rides[price_col].mean()
-    baseline_revenue = mean_no_promo * promo_rides.shape[0]
-    revenue_promo = promo_rides[price_col].sum()
-    incremental_profit = revenue_promo - baseline_revenue
-    promo_cost = promo_rides.shape[0] * promo_cost_per_ride
-    roi = incremental_profit / promo_cost
-    roi_percent = roi * 100
-
-    print(f"Baseline выручка: {baseline_revenue:_.0f} руб.")
-    print(f"Фактическая выручка по промо: {revenue_promo:_.0f} руб.")
-    print(f"Инкрементальная прибыль: {incremental_profit:_.0f} руб.")
-    print(f"Издержки на промо: {promo_cost:_.0f} руб.")
-
-    # Цветной ROI
-    if roi_percent >= 0:
-        color = "\033[92m"  # зеленый
-        status = "положительный"
-    else:
-        color = "\033[91m"  # красный
-        status = "отрицательный"
-    reset = "\033[0m"
-    print(f"ROI: {color}{roi_percent:.1f}% ({status}){reset}")
+    price_effect = (mon_morning_avg_price - mon_midday_avg_price) - (control_morning_avg_price - control_midday_avg_price)
+    print(f"Эффект на среднюю цену (Difference-in-Differences): {price_effect:.1f} ₽")

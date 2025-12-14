@@ -85,3 +85,85 @@ def get_total_price(row: pd.Series, start_price: int = 30) -> float:
         total_price = start_price + duration_minutes * price_per_min
 
     return total_price
+
+
+def filter_time(
+        data: pd.DataFrame,
+        day_of_week: str,
+        start_hour: int,
+        end_hour: int
+) -> pd.DataFrame:
+    """
+    Фильтрует поездки по дню недели и диапазону часов.
+
+    Параметры:
+    ----------
+    data : pd.DataFrame
+        Датасет с поездками. Должен содержать колонки:
+        - 'day_of_week' : str — день недели
+        - 'start_date' : pd.Timestamp — дата и время начала поездки
+    day_of_week : str
+        День недели, по которому фильтруем поездки (например, "понедельник").
+    start_hour : int
+        Начальный час интервала (включительно, 0–23).
+    end_hour : int
+        Конечный час интервала (не включительно, 1–24).
+
+    Возвращает:
+    ----------
+    pd.DataFrame
+        Отфильтрованный DataFrame, содержащий только поездки, которые
+        происходят в указанный день недели и в указанный диапазон часов.
+    """
+
+    return data[
+        (data['day_of_week'] == day_of_week) &
+        (data['start_date'].dt.hour >= start_hour) &
+        (data['start_date'].dt.hour < end_hour)
+    ]
+
+
+def select_control_day(
+        data: pd.DataFrame,
+        target_rides: pd.Series,
+        exclude_day: str = 'понедельник',
+        start_hour: int = 10,
+        end_hour: int =14
+) -> str:
+    """
+    Выбирает контрольный день, где число поездок в указанном интервале
+    максимально близко к целевому значению target_rides.
+
+    Параметры:
+    ----------
+    data : pd.DataFrame
+        Датасет с поездками. Должен содержать колонки:
+        - 'day_of_week' : str — день недели
+        - 'start_date' : pd.Timestamp — дата и время начала поездки
+        - 'id' : уникальный идентификатор поездки
+        - 'day_timestamp' : pd.Timestamp — уникальный день
+    target_rides : int
+        Количество поездок, к которому нужно подобрать контрольный день.
+    exclude_day : str, default='понедельник'
+        День недели, который исключаем из кандидатов (например, чтобы не брать понедельник).
+    start_hour : int, default=10
+        Начальный час интервала для подсчёта поездок (включительно).
+    end_hour : int, default=14
+        Конечный час интервала для подсчёта поездок (не включительно).
+
+    Возвращает:
+    ----------
+    str
+        Значение 'day_timestamp' контрольного дня, который максимально
+        близок к target_rides по количеству поездок в указанном интервале.
+    """
+    candidates = data[
+        (data['day_of_week'] != exclude_day) &
+        (data['start_date'].dt.hour >= start_hour) &
+        (data['start_date'].dt.hour < end_hour)
+    ]
+    stats = candidates.groupby("day_timestamp")["id"].count().reset_index(name="rides")
+    control_day = stats.assign(distance=lambda x: abs(x["rides"] - target_rides))\
+                       .sort_values("distance")\
+                       .iloc[0]["day_timestamp"]
+    return control_day
