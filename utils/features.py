@@ -167,3 +167,120 @@ def select_control_day(
                        .sort_values("distance")\
                        .iloc[0]["day_timestamp"]
     return control_day
+
+def _create_traffic_df(
+        data: pd.DataFrame,
+        date_column: str,
+        point_column: str,
+        period: str
+) -> pd.DataFrame:
+    """
+    Внутренняя функция для создания DataFrame трафика по точкам.
+
+    Parameters:
+    -----------
+    data : pd.DataFrame
+        Исходный DataFrame с данными
+    date_column : str
+        Название колонки с датой (start_date или end_date)
+    point_column : str
+        Название колонки с точкой (start_location или end_location)
+    period : str
+        Период для ресемплинга
+
+    Returns:
+    --------
+    pd.DataFrame
+        DataFrame с трафиком по периодам и точкам
+    """
+    # Создаем копию необходимых колонок
+    traffic_data = data[[date_column, point_column]].copy()
+
+    # Индексируем по дате
+    traffic_data.set_index(date_column, inplace=True)
+
+    # Группируем по точке и ресемплируем по периоду
+    traffic_df = (
+        traffic_data
+        .groupby(point_column)
+        .resample(period, include_groups=False)
+        .size()
+        .unstack(level=0)
+        .fillna(0)
+    )
+
+    # Устанавливаем имя для колонок
+    traffic_df.columns.name = 'point'
+
+    return traffic_df
+
+
+def create_departures_df(data: pd.DataFrame, period: str, start_point: str = "start_location") -> pd.DataFrame:
+    """
+    Создает DataFrame с количеством отправлений по точкам за указанный период.
+
+    Parameters:
+    -----------
+    data : pd.DataFrame
+        Исходный DataFrame с данными о перемещениях
+    period : str
+        Период для ресемплинга (например, 'D' - день, 'W' - неделя, 'M' - месяц)
+    start_point : str
+        Название колонки с точкой отправления
+
+    Returns:
+    --------
+    pd.DataFrame
+        DataFrame с количеством отправлений по периодам и точкам
+    """
+    return _create_traffic_df(
+        data=data,
+        date_column='start_date',
+        point_column=start_point,
+        period=period
+    )
+
+
+def create_arrivals_df(data: pd.DataFrame, period: str, end_point: str = "end_location") -> pd.DataFrame:
+    """
+    Создает DataFrame с количеством прибытий по точкам за указанный период.
+
+    Parameters:
+    -----------
+    data : pd.DataFrame
+        Исходный DataFrame с данными о перемещениях
+    period : str
+        Период для ресемплинга (например, 'D' - день, 'W' - неделя, 'M' - месяц)
+    end_point : str
+        Название колонки с точкой прибытия
+
+    Returns:
+    --------
+    pd.DataFrame
+        DataFrame с количеством прибытий по периодам и точкам
+    """
+    return _create_traffic_df(
+        data=data,
+        date_column='end_date',
+        point_column=end_point,
+        period=period
+    )
+
+def traffic_by_points(
+        data: pd.DataFrame,
+        period: str,
+        start_point: str = "start_location",
+        end_point: str = "end_location"
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+
+    # Создаем отдельные DataFrame для отправлений и прибытий
+    departures = create_departures_df(data, period, start_point)
+    arrivals = create_arrivals_df(data, period, end_point)
+
+    # разница между приходом и отходом
+    net_flow = arrivals.subtract(departures, fill_value=0)
+
+    # Объединяем отправления и прибытия
+    total_traffic = departures.add(arrivals, fill_value=0)
+
+    return total_traffic, departures, arrivals, net_flow
