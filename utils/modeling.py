@@ -44,11 +44,11 @@ def build_hourly_dataset(data: pd.DataFrame, timestamp_col: str = "hour_timestam
             mean_precipitation_total=("precipitation_total", "mean"),
             mean_cloud_cover_total=("cloud_cover_total", "mean"),
             promo=("promo", "max"),
-            start_location=("start_location", "max")
         )
         .reset_index()
     )
 
+    data["hour_of_day"] = data[timestamp_col].dt.hour
     data = demand.merge(factors, on=timestamp_col, how="left")
 
     return data
