@@ -245,3 +245,95 @@ def plot_topn_bar(
         plt.savefig(save_path)
     plt.show()
     plt.close()
+
+
+def plot_actual_vs_predicted(
+    y_true: pd.Series,
+    y_pred: pd.Series,
+    figsize: tuple = (16, 6),
+    save_path: Optional[str] = None,
+) -> None:
+    """
+    Строит график фактических и предсказанных значений спроса во времени.
+
+    Используется для оценки того, насколько хорошо модель повторяет
+    временной паттерн спроса.
+
+    Параметры
+    ----------
+    y_true : pd.Series
+        Фактические значения целевой переменной.
+    y_pred : pd.Series
+        Предсказанные значения модели.
+    figsize : tuple, default=(16, 6)
+        Размер графика.
+    save_path : Optional[str], default=None
+        Путь для сохранения изображения. Если None — график отображается на экране.
+
+    Возвращает
+    ----------
+    None
+    """
+    plt.figure(figsize=figsize)
+    plt.plot(y_true.index, y_true, label="Фактический спрос", color="blue")
+    plt.plot(y_true.index, y_pred, label="Прогноз модели", color="orange", alpha=0.7)
+
+    plt.xlabel("Время")
+    plt.ylabel("Спрос (количество поездок)")
+    plt.title("Фактический vs прогноз модели")
+    plt.legend()
+    plt.tight_layout()
+
+    if save_path:
+        plt.savefig(save_path)
+
+    plt.show()
+    plt.close()
+
+
+def plot_residuals_distribution(
+    y_true: pd.Series,
+    y_pred: pd.Series,
+    figsize: tuple = (8, 4),
+    kde: bool = True,
+    save_path: Optional[str] = None,
+) -> None:
+    """
+    Строит гистограмму распределения остатков модели.
+
+    Используется для проверки предположений линейной регрессии:
+    - нормальность остатков,
+    - наличие асимметрии,
+    - выбросы.
+
+    Параметры
+    ----------
+    y_true : pd.Series
+        Фактические значения целевой переменной.
+    y_pred : pd.Series
+        Предсказанные значения модели.
+    figsize : tuple, default=(8, 4)
+        Размер графика.
+    kde : bool, default=True
+        Отображать ли KDE-кривую плотности.
+    save_path : Optional[str], default=None
+        Путь для сохранения изображения. Если None — график отображается на экране.
+
+    Возвращает
+    ----------
+    None
+    """
+    residuals = y_true - y_pred
+
+    plt.figure(figsize=figsize)
+    sns.histplot(residuals, kde=kde, color="purple")
+
+    plt.xlabel("Остатки")
+    plt.title("Распределение остатков модели")
+    plt.tight_layout()
+
+    if save_path:
+        plt.savefig(save_path)
+
+    plt.show()
+    plt.close()
