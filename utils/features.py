@@ -287,8 +287,27 @@ def traffic_by_points(
 
     # разница между приходом и отходом
     net_flow = arrivals.subtract(departures, fill_value=0)
+    net_long = net_flow.stack().reset_index()
+    net_long.columns = ['time', 'point', 'net_balance']
 
     # Объединяем отправления и прибытия
     total_traffic = departures.add(arrivals, fill_value=0)
 
-    return total_traffic, departures, arrivals, net_flow
+    return total_traffic, departures, arrivals, net_long
+
+def calculate_optimal_scooters(net_long: pd.DataFrame) -> pd.DataFrame:
+    # 1. Группируем с 6:00 до 6:00
+
+    net_long = net_long.copy()
+    net_long['day_6am'] = net_long['time'] - pd.Timedelta(hours=6)
+    net_long['day_6am'] = net_long['day_6am'].dt.date
+
+    # 2. Кумулятивная сумма внутри каждой группы (точка + сутки с 6:00)
+    net_long = net_long.sort_values(['point', 'day_6am', 'time'])
+    net_long['cumulative'] = net_long.groupby(['point', 'day_6am'])['net_balance'].cumsum()
+
+    # 3. Минимальный кумулятивный баланс за сутки = дефицит
+    daily_min = net_long.groupby(['point', 'day_6am'])['cumulative'].min().reset_index()
+    daily_min['optimal_count'] = daily_min['cumulative'].apply(lambda x: abs(x) if x < 0 else 0)
+
+    return daily_min
