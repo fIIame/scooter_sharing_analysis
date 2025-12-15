@@ -218,7 +218,7 @@ def _create_traffic_df(
 def create_departures_df(
         data: pd.DataFrame,
         period: str,
-        start_point: str = "start_location"
+        start_point: str = "start_location",
 ) -> pd.DataFrame:
     """
     Создает DataFrame с количеством отправлений по точкам за указанный период.
@@ -311,3 +311,49 @@ def calculate_optimal_scooters(net_long: pd.DataFrame) -> pd.DataFrame:
     daily_min['optimal_count'] = daily_min['cumulative'].apply(lambda x: abs(x) if x < 0 else 0)
 
     return daily_min
+
+def create_od_matrix(data: pd.DataFrame,
+        start_point: str = "start_location",
+        end_point: str = "end_location",
+        period: str = "d"):
+
+    od_data = data[[start_point, end_point]].copy()
+
+    if period:
+        od_data["period"] = data["start_date"].dt.to_period(period)
+        return od_data.groupby(["period", start_point, end_point]).size().reset_index(name="count")
+    return od_data.groupby([start_point, end_point]).size().reset_index(name="count")
+
+
+def _classify_point(row: pd.Series):
+    net = row["net_flow"]
+    ratio = row["flow_ratio"]
+
+    if net > 10 and ratio > 1.5: return "strong_acceptor"
+    elif net > 5: return "acceptor"
+    elif net < -10 and ratio < 0.5: return "strong_donor"
+    elif net < -5: return "donor"
+    elif -5 <= net <= 5: return "balanced"
+    else: return "unknown"
+
+def analyze_od_flows(data: pd.DataFrame,
+        start_point: str = "start_location",
+        end_point: str = "end_location",
+        custom_matrix: pd.DataFrame = None):
+
+    od_matrix = create_od_matrix(data, start_point, end_point) if custom_matrix is None else custom_matrix
+
+    outflow = od_matrix.groupby(start_point)["count"].sum().reset_index()
+    outflow.columns = ["point", "outflow"]
+    inflow = od_matrix.groupby(end_point)["count"].sum().reset_index()
+    inflow.columns = ["point", "inflow"]
+
+    point_summary = pd.merge(outflow, inflow, on="point", how="outer").fillna(0)
+
+    point_summary["net_flow"] = point_summary["inflow"] - point_summary["outflow"]
+
+    point_summary["flow_ratio"] = point_summary["inflow"] / point_summary["outflow"].replace(0, 1)
+
+    point_summary["point_type"] = point_summary.apply(_classify_point, axis=1)
+
+    return point_summary
