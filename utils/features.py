@@ -274,12 +274,47 @@ def create_arrivals_df(
         period=period
     )
 
+
 def traffic_by_points(
         data: pd.DataFrame,
         period: str,
         start_point: str = "start_location",
         end_point: str = "end_location"
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Анализирует трафик по точкам отправления и прибытия за указанный период.
+
+    Функция вычисляет отдельно отправления (departures) и прибытия (arrivals),
+    затем рассчитывает net flow (прибытия - отправления) и общий трафик.
+
+    Parameters:
+    -----------
+    data : pd.DataFrame
+        Исходный DataFrame с данными о перемещениях самокатов.
+        Должен содержать колонки: 'start_date', 'end_date', start_point, end_point.
+    period : str
+        Период для агрегации данных.
+        Допустимые значения: 'D' (день), 'W' (неделя), 'M' (месяц), 'H' (час).
+    start_point : str, optional
+        Название колонки с точкой отправления. По умолчанию "start_location".
+    end_point : str, optional
+        Название колонки с точкой прибытия. По умолчанию "end_location".
+
+    Returns:
+    --------
+    tuple[pd.DataFrame, pd.DataFrame]
+        Кортеж из двух DataFrame:
+        1. total_traffic: DataFrame с общим трафиком (отправления + прибытия)
+           по точкам за каждый период времени.
+        2. net_long: DataFrame в длинном формате с net балансом по точкам
+           за каждый период времени. Колонки: ['time', 'point', 'net_balance']
+
+    Examples:
+    ---------
+    >>> total_traffic, net_balance = traffic_by_points(data, 'D')
+    >>> print(total_traffic.head())
+    >>> print(net_balance.head())
+    """
 
     # Создаем отдельные DataFrame для отправлений и прибытий
     departures = create_departures_df(data, period, start_point)
@@ -295,9 +330,47 @@ def traffic_by_points(
 
     return total_traffic, net_long
 
-def calculate_optimal_scooters(net_long: pd.DataFrame) -> pd.DataFrame:
-    # 1. Группируем с 6:00 до 6:00
 
+def calculate_optimal_scooters(net_long: pd.DataFrame) -> pd.DataFrame:
+    """
+    Рассчитывает оптимальное количество самокатов для каждой точки за сутки.
+
+    Алгоритм:
+    1. Группирует данные по суткам с 6:00 до 6:00 следующего дня
+    2. Вычисляет кумулятивную сумму net баланса внутри каждой группы
+    3. Определяет минимальный кумулятивный баланс за сутки как дефицит
+    4. Рассчитывает оптимальное количество самокатов для покрытия дефицита
+
+    Parameters:
+    -----------
+    net_long : pd.DataFrame
+        DataFrame с net балансом по точкам за периоды времени.
+        Должен содержать колонки: ['time', 'point', 'net_balance'].
+
+    Returns:
+    --------
+    pd.DataFrame
+        DataFrame с оптимальным количеством самокатов для каждой точки за сутки.
+        Колонки:
+        - point: идентификатор точки
+        - day_6am: дата начала суток (с 6:00)
+        - cumulative: минимальный кумулятивный баланс за сутки
+        - optimal_count: оптимальное количество самокатов для точки
+
+    Notes:
+    ------
+    - Сутки считаются с 6:00 до 6:00 следующего дня
+    - optimal_count = |cumulative| если cumulative < 0, иначе 0
+    - Отрицательный cumulative означает дефицит самокатов
+
+    Examples:
+    ---------
+    >>> total_traffic, net_long = traffic_by_points(data, 'D')
+    >>> optimal_scooters = calculate_optimal_scooters(net_long)
+    >>> print(optimal_scooters.head())
+    """
+
+    # 1. Группируем с 6:00 до 6:00
     net_long = net_long.copy()
     net_long['day_6am'] = net_long['time'] - pd.Timedelta(hours=6)
     net_long['day_6am'] = net_long['day_6am'].dt.date
@@ -312,10 +385,40 @@ def calculate_optimal_scooters(net_long: pd.DataFrame) -> pd.DataFrame:
 
     return daily_min
 
+
 def create_od_matrix(data: pd.DataFrame,
-        start_point: str = "start_location",
-        end_point: str = "end_location",
-        period: str = "d"):
+                     start_point: str = "start_location",
+                     end_point: str = "end_location",
+                     period: str = "d"):
+    """
+    Создает матрицу корреспонденций (Origin-Destination matrix) между точками.
+
+    Parameters:
+    -----------
+    data : pd.DataFrame
+        Исходный DataFrame с данными о перемещениях.
+    start_point : str, optional
+        Название колонки с точкой отправления (origin). По умолчанию "start_location".
+    end_point : str, optional
+        Название колонки с точкой прибытия (destination). По умолчанию "end_location".
+    period : str, optional
+        Период для агрегации данных. Если None, агрегирует за весь период.
+        Допустимые значения: 'd' (день), 'w' (неделя), 'm' (месяц), None (весь период).
+
+    Returns:
+    --------
+    pd.DataFrame
+        Матрица корреспонденций с колонками:
+        - period: период агрегации (если period указан)
+        - start_point: точка отправления
+        - end_point: точка прибытия
+        - count: количество перемещений
+
+    Examples:
+    ---------
+    >>> od_matrix = create_od_matrix(data, period='D')
+    >>> od_matrix_total = create_od_matrix(data, period=None)
+    """
 
     od_data = data[[start_point, end_point]].copy()
 
@@ -326,20 +429,87 @@ def create_od_matrix(data: pd.DataFrame,
 
 
 def _classify_point(row: pd.Series):
+    """
+    Классифицирует точку на основе net flow и соотношения притока/оттока.
+
+    Parameters:
+    -----------
+    row : pd.Series
+        Строка DataFrame с колонками: 'net_flow', 'flow_ratio'.
+
+    Returns:
+    --------
+    str
+        Тип точки:
+        - 'strong_acceptor': сильный акцептор (net > 10 и ratio > 1.5)
+        - 'acceptor': акцептор (net > 5)
+        - 'strong_donor': сильный донор (net < -10 и ratio < 0.5)
+        - 'donor': донор (net < -5)
+        - 'balanced': сбалансированная (-5 <= net <= 5)
+        - 'unknown': неизвестный тип (все остальные случаи)
+
+    Notes:
+    ------
+    Функция используется внутри analyze_od_flows для классификации точек.
+    """
+
     net = row["net_flow"]
     ratio = row["flow_ratio"]
 
-    if net > 10 and ratio > 1.5: return "strong_acceptor"
-    elif net > 5: return "acceptor"
-    elif net < -10 and ratio < 0.5: return "strong_donor"
-    elif net < -5: return "donor"
-    elif -5 <= net <= 5: return "balanced"
-    else: return "unknown"
+    if net > 10 and ratio > 1.5:
+        return "strong_acceptor"
+    elif net > 5:
+        return "acceptor"
+    elif net < -10 and ratio < 0.5:
+        return "strong_donor"
+    elif net < -5:
+        return "donor"
+    elif -5 <= net <= 5:
+        return "balanced"
+    else:
+        return "unknown"
+
 
 def analyze_od_flows(data: pd.DataFrame,
-        start_point: str = "start_location",
-        end_point: str = "end_location",
-        custom_matrix: pd.DataFrame = None):
+                     start_point: str = "start_location",
+                     end_point: str = "end_location",
+                     custom_matrix: pd.DataFrame = None):
+    """
+    Анализирует потоки между точками и классифицирует их по типам.
+
+    Parameters:
+    -----------
+    data : pd.DataFrame
+        Исходный DataFrame с данными о перемещениях.
+        Используется только если custom_matrix не указан.
+    start_point : str, optional
+        Название колонки с точкой отправления. По умолчанию "start_location".
+    end_point : str, optional
+        Название колонки с точкой прибытия. По умолчанию "end_location".
+    custom_matrix : pd.DataFrame, optional
+        Пользовательская матрица корреспонденций.
+        Если указана, используется вместо создания матрицы из data.
+
+    Returns:
+    --------
+    pd.DataFrame
+        DataFrame с анализом точек, содержащий колонки:
+        - point: идентификатор точки
+        - outflow: общее количество отправлений из точки
+        - inflow: общее количество прибытий в точку
+        - net_flow: чистый поток (inflow - outflow)
+        - flow_ratio: соотношение притока к оттоку (inflow / outflow)
+        - point_type: тип точки (определяется функцией _classify_point)
+
+    Examples:
+    ---------
+    >>> # Использование с исходными данными
+    >>> point_analysis = analyze_od_flows(data)
+    >>>
+    >>> # Использование с пользовательской матрицей
+    >>> custom_od = create_od_matrix(data, period='M')
+    >>> point_analysis = analyze_od_flows(data, custom_matrix=custom_od)
+    """
 
     od_matrix = create_od_matrix(data, start_point, end_point) if custom_matrix is None else custom_matrix
 
