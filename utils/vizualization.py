@@ -337,3 +337,103 @@ def plot_residuals_distribution(
 
     plt.show()
     plt.close()
+
+
+def plot_deficit_heatmap(
+        net_long: pd.DataFrame,
+        daily_min: pd.DataFrame,
+        top_n: int = 20,
+        save_path: Optional[str] = None
+) -> None:
+    """
+    Строит heatmap для топ-дефицитных точек по почасовому net_balance.
+
+    Используется для анализа, в какие часы и в каких точках наблюдается дефицит самокатов.
+
+    Параметры
+    ----------
+    net_long : pd.DataFrame
+        DataFrame в длинном формате с колонками ['time', 'point', 'net_balance'].
+    daily_min : pd.DataFrame
+        DataFrame с расчетом оптимального количества самокатов.
+    top_n : int, default=20
+        Количество топ-дефицитных точек для отображения.
+    save_path : Optional[str], default=None
+        Путь для сохранения изображения. Если None — график отображается на экране.
+
+    Возвращает
+    ----------
+    None
+    """
+    hourly_profile = (
+        net_long
+        .groupby([net_long['time'].dt.hour, 'point'])['net_balance']
+        .mean()
+        .unstack()
+    )
+
+    mean_deficit = daily_min.groupby("point")["optimal_count"].mean()
+    top_deficit = mean_deficit.sort_values(ascending=False).head(top_n).index
+
+    plt.figure(figsize=(14, 8))
+    sns.heatmap(hourly_profile[top_deficit].T, cmap="RdYlGn_r", center=0, linewidths=0.5)
+    plt.title(f"Топ {top_n} дефицитных точек по самокатам")
+    plt.xlabel("Час дня")
+    plt.ylabel("Точки")
+    plt.yticks(rotation=0)
+    plt.tight_layout()
+
+    if save_path:
+        plt.savefig(save_path)
+    plt.show()
+    plt.close()
+
+
+def plot_surplus_heatmap(
+        net_long: pd.DataFrame,
+        daily_min: pd.DataFrame,
+        top_n: int = 20,
+        save_path: Optional[str] = None
+) -> None:
+    """
+    Строит heatmap для топ-избыточных точек по почасовому net_balance.
+
+    Используется для анализа, в какие часы и в каких точках наблюдается избыток самокатов.
+
+    Параметры
+    ----------
+    net_long : pd.DataFrame
+        DataFrame в длинном формате с колонками ['time', 'point', 'net_balance'].
+    daily_min : pd.DataFrame
+        DataFrame с расчетом оптимального количества самокатов.
+    top_n : int, default=20
+        Количество топ-избыточных точек для отображения.
+    save_path : Optional[str], default=None
+        Путь для сохранения изображения. Если None — график отображается на экране.
+
+    Возвращает
+    ----------
+    None
+    """
+    hourly_profile = (
+        net_long
+        .groupby([net_long['time'].dt.hour, 'point'])['net_balance']
+        .mean()
+        .unstack()
+    )
+
+    mean_deficit = daily_min.groupby("point")["optimal_count"].mean()
+    top_surplus = mean_deficit.sort_values(ascending=True).head(top_n).index
+
+    plt.figure(figsize=(14, 8))
+    sns.heatmap(hourly_profile[top_surplus].T, cmap="RdYlGn_r", center=0, linewidths=0.5)
+    plt.title(f"Топ {top_n} избыточных точек по самокатам")
+    plt.xlabel("Час дня")
+    plt.ylabel("Точки")
+    plt.yticks(rotation=0)
+    plt.tight_layout()
+
+    if save_path:
+        plt.savefig(save_path)
+    plt.show()
+    plt.close()
