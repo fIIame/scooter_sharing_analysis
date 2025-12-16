@@ -279,7 +279,7 @@ def traffic_by_points(
         period: str,
         start_point: str = "start_location",
         end_point: str = "end_location"
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+) -> tuple[pd.DataFrame, pd.DataFrame]:
 
     # Создаем отдельные DataFrame для отправлений и прибытий
     departures = create_departures_df(data, period, start_point)
@@ -293,7 +293,7 @@ def traffic_by_points(
     # Объединяем отправления и прибытия
     total_traffic = departures.add(arrivals, fill_value=0)
 
-    return total_traffic, departures, arrivals, net_long
+    return total_traffic, net_long
 
 def calculate_optimal_scooters(net_long: pd.DataFrame) -> pd.DataFrame:
     # 1. Группируем с 6:00 до 6:00
