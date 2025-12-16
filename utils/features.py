@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import pandas as pd
 
 
@@ -125,7 +127,7 @@ def filter_time(
 
 def select_control_day(
         data: pd.DataFrame,
-        target_rides: pd.Series,
+        target_rides: int,
         exclude_day: str = 'понедельник',
         start_hour: int = 10,
         end_hour: int =14
@@ -163,10 +165,13 @@ def select_control_day(
         (data['start_date'].dt.hour < end_hour)
     ]
     stats = candidates.groupby("day_timestamp")["id"].count().reset_index(name="rides")
-    control_day = stats.assign(distance=lambda x: abs(x["rides"] - target_rides))\
+    control_timestamp = stats.assign(distance=lambda x: abs(x["rides"] - target_rides))\
                        .sort_values("distance")\
                        .iloc[0]["day_timestamp"]
+    control_day = data[data["day_timestamp"] == control_timestamp]["day_of_week"].iloc[0]
+
     return control_day
+
 
 def _create_traffic_df(
         data: pd.DataFrame,
@@ -280,7 +285,7 @@ def traffic_by_points(
         period: str,
         start_point: str = "start_location",
         end_point: str = "end_location"
-) -> tuple[pd.DataFrame, pd.DataFrame]:
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Анализирует трафик по точкам отправления и прибытия за указанный период.
 
@@ -315,7 +320,6 @@ def traffic_by_points(
     >>> print(total_traffic.head())
     >>> print(net_balance.head())
     """
-
     # Создаем отдельные DataFrame для отправлений и прибытий
     departures = create_departures_df(data, period, start_point)
     arrivals = create_arrivals_df(data, period, end_point)
@@ -370,7 +374,6 @@ def calculate_optimal_scooters(net_long: pd.DataFrame) -> pd.DataFrame:
     >>> print(optimal_scooters.head())
     """
 
-    # 1. Группируем с 6:00 до 6:00
     net_long = net_long.copy()
     net_long['day_6am'] = net_long['time'] - pd.Timedelta(hours=6)
     net_long['day_6am'] = net_long['day_6am'].dt.date
@@ -386,10 +389,12 @@ def calculate_optimal_scooters(net_long: pd.DataFrame) -> pd.DataFrame:
     return daily_min
 
 
-def create_od_matrix(data: pd.DataFrame,
-                     start_point: str = "start_location",
-                     end_point: str = "end_location",
-                     period: str = "d"):
+def create_od_matrix(
+        data: pd.DataFrame,
+        start_point: str = "start_location",
+        end_point: str = "end_location",
+        period: str = "d"
+) -> pd.DataFrame:
     """
     Создает матрицу корреспонденций (Origin-Destination matrix) между точками.
 
@@ -470,10 +475,12 @@ def _classify_point(row: pd.Series):
         return "unknown"
 
 
-def analyze_od_flows(data: pd.DataFrame,
-                     start_point: str = "start_location",
-                     end_point: str = "end_location",
-                     custom_matrix: pd.DataFrame = None):
+def analyze_od_flows(
+        data: pd.DataFrame,
+        start_point: str = "start_location",
+        end_point: str = "end_location",
+        custom_matrix: pd.DataFrame = None
+) -> pd.DataFrame:
     """
     Анализирует потоки между точками и классифицирует их по типам.
 
@@ -511,6 +518,7 @@ def analyze_od_flows(data: pd.DataFrame,
     >>> point_analysis = analyze_od_flows(data, custom_matrix=custom_od)
     """
 
+    od_matrix = create_od_matrix(data, start_point, end_point) if custom_matrix is None else custom_matrix
     od_matrix = create_od_matrix(data, start_point, end_point) if custom_matrix is None else custom_matrix
 
     outflow = od_matrix.groupby(start_point)["count"].sum().reset_index()
